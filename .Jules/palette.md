@@ -1,0 +1,3 @@
+## 2025-01-24 - Async OpenAI and Typing Feedback in Discord
+**Learning:** In asynchronous Discord bot frameworks like `discord.py`, utilizing a synchronous HTTP client blocks the single-threaded event loop, leading to delayed or frozen interactions for other active commands and members. Adding non-blocking asynchronous calls with `AsyncOpenAI` keeps the application responsive, while wrapping generation in `async with message.channel.typing()` provides users with immediate visual feedback, significantly improving the apparent response latency and UX.
+**Action:** Always prefer asynchronous libraries/clients (like `AsyncOpenAI`) and use visual state feedback contexts (such as `typing()`) in async bot applications to avoid blocking operations.
