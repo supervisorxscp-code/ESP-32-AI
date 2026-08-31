@@ -31,6 +31,10 @@ async def on_message(message):
     if bot.user.mentioned_in(message):
         user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
 
+    if not user_input:
+        await message.reply("Bạn hãy nhập câu hỏi hoặc yêu cầu để mình hỗ trợ nhé!")
+        return
+
     try:
         response = client.chat.completions.create(
             model="meta/llama-3.3-70b-instruct",
