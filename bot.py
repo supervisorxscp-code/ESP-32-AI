@@ -1,13 +1,13 @@
 import discord
 import os
-from openai import OpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(
+client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("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")
+    api_key=os.getenv("NVIDIA_API_KEY")
 )
 
 intents = discord.Intents.default()
@@ -29,21 +29,28 @@ async def on_message(message):
 
     user_input = message.content
     if bot.user.mentioned_in(message):
-        user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
+        user_input = user_input.replace(f"<@{bot.user.id}>", "").replace(f"<@!{bot.user.id}>", "").strip()
+
+    if not user_input:
+        await message.reply("Bạn cần tôi giúp gì?")
+        return
 
     try:
-        response = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[
-                {"role": "system", "content": "Bạn là trợ lý thông minh, trả lời ngắn gọn bằng tiếng Việt."},
-                {"role": "user", "content": user_input}
-            ],
-            temperature=0.7,
-            max_tokens=800
-        )
-        ai_reply = response.choices[0].message.content
-        await message.reply(ai_reply[:1900])
-    except Exception as e:
+        async with message.channel.typing():
+            response = await client.chat.completions.create(
+                model="meta/llama-3.3-70b-instruct",
+                messages=[
+                    {"role": "system", "content": "Bạn là trợ lý thông minh, trả lời ngắn gọn bằng tiếng Việt."},
+                    {"role": "user", "content": user_input}
+                ],
+                temperature=0.7,
+                max_tokens=800
+            )
+            ai_reply = response.choices[0].message.content or ""
+            if len(ai_reply) > 1900:
+                ai_reply = ai_reply[:1897] + "..."
+            await message.reply(ai_reply)
+    except Exception as e:  # noqa: BLE001
         await message.reply(f"❌ Lỗi: {str(e)}")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
