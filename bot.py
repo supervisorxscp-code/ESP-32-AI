@@ -1,24 +1,41 @@
-import discord
 import os
-from openai import OpenAI
+import discord
 from dotenv import load_dotenv
+from openai import AsyncOpenAI
 
 load_dotenv()
 
-client = OpenAI(
+_api_key = os.getenv("NVIDIA_API_KEY") or "dummy_key_for_test"
+
+client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("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")
+    api_key=_api_key,
 )
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID", "0"))
+
+
+def format_ai_reply(reply: str) -> str:
+    """Format AI reply to adhere to Discord character limit."""
+    if len(reply) > 1900:
+        return reply[:1897] + "..."
+    return reply
+
+
+def clean_user_input(content: str, bot_id: int) -> str:
+    """Strip bot mentions (<@id> and <@!id>) and leading/trailing whitespace."""
+    content = content.replace(f"<@{bot_id}>", "").replace(f"<@!{bot_id}>", "")
+    return content.strip()
+
 
 @bot.event
 async def on_ready():
-    print(f'✅ Bot đã online: {bot.user}')
+    print(f"✅ Bot đã online: {bot.user}")
+
 
 @bot.event
 async def on_message(message):
@@ -28,22 +45,35 @@ async def on_message(message):
         return
 
     user_input = message.content
-    if bot.user.mentioned_in(message):
-        user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
+    if bot.user.id and bot.user.mentioned_in(message):
+        user_input = clean_user_input(user_input, bot.user.id)
+
+    if not user_input:
+        await message.reply("Bạn cần trợ giúp gì? Hãy nhập câu hỏi nhé! 😊")
+        return
 
     try:
-        response = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[
-                {"role": "system", "content": "Bạn là trợ lý thông minh, trả lời ngắn gọn bằng tiếng Việt."},
-                {"role": "user", "content": user_input}
-            ],
-            temperature=0.7,
-            max_tokens=800
-        )
-        ai_reply = response.choices[0].message.content
-        await message.reply(ai_reply[:1900])
-    except Exception as e:
+        async with message.channel.typing():
+            response = await client.chat.completions.create(
+                model="meta/llama-3.3-70b-instruct",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Bạn là trợ lý thông minh, trả lời ngắn gọn"
+                            " bằng tiếng Việt."
+                        ),
+                    },
+                    {"role": "user", "content": user_input},
+                ],
+                temperature=0.7,
+                max_tokens=800,
+            )
+            ai_reply = response.choices[0].message.content or ""
+            await message.reply(format_ai_reply(ai_reply))
+    except Exception as e:  # noqa: BLE001
         await message.reply(f"❌ Lỗi: {str(e)}")
 
-bot.run(os.getenv("DISCORD_TOKEN"))
+
+if __name__ == "__main__":
+    bot.run(os.getenv("DISCORD_TOKEN"))
