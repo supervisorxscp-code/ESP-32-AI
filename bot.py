@@ -29,7 +29,11 @@ async def on_message(message):
 
     user_input = message.content
     if bot.user.mentioned_in(message):
-        user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
+        user_input = user_input.replace(f"<@{bot.user.id}>", "").replace(f"<@!{bot.user.id}>", "").strip()
+
+    if not user_input:
+        await message.reply("Bạn cần tôi giúp gì? Hãy gửi câu hỏi cho tôi nhé! 😊")
+        return
 
     try:
         response = client.chat.completions.create(
