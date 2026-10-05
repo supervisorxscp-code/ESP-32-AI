@@ -29,7 +29,11 @@ async def on_message(message):
 
     user_input = message.content
     if bot.user.mentioned_in(message):
-        user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
+        user_input = user_input.replace(f"<@{bot.user.id}>", "").replace(f"<@!{bot.user.id}>", "").strip()
+
+    if not user_input:
+        await message.reply("💡 Bạn cần nhập câu hỏi hoặc yêu cầu!")
+        return
 
     try:
         response = client.chat.completions.create(
@@ -46,4 +50,5 @@ async def on_message(message):
     except Exception as e:
         await message.reply(f"❌ Lỗi: {str(e)}")
 
-bot.run(os.getenv("DISCORD_TOKEN"))
+if __name__ == "__main__":
+    bot.run(os.getenv("DISCORD_TOKEN"))
