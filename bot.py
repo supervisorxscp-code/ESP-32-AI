@@ -1,7 +1,8 @@
-import discord
 import os
-from openai import OpenAI
+
+import discord
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -31,6 +32,10 @@ async def on_message(message):
     if bot.user.mentioned_in(message):
         user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
 
+    if not user_input:
+        await message.reply("👋 Chào bạn! Hãy nhập câu hỏi hoặc yêu cầu của bạn sau khi nhắc tên mình nhé.")
+        return
+
     try:
         response = client.chat.completions.create(
             model="meta/llama-3.3-70b-instruct",
@@ -43,7 +48,7 @@ async def on_message(message):
         )
         ai_reply = response.choices[0].message.content
         await message.reply(ai_reply[:1900])
-    except Exception as e:
-        await message.reply(f"❌ Lỗi: {str(e)}")
+    except Exception as e:  # noqa: BLE001
+        await message.reply(f"❌ Lỗi: {e!s}")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
