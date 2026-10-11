@@ -42,7 +42,9 @@ async def on_message(message):
             max_tokens=800
         )
         ai_reply = response.choices[0].message.content
-        await message.reply(ai_reply[:1900])
+        if len(ai_reply) > 1900:
+            ai_reply = ai_reply[:1897] + "..."
+        await message.reply(ai_reply)
     except Exception as e:
         await message.reply(f"❌ Lỗi: {str(e)}")
 
