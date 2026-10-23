@@ -1,0 +1,3 @@
+## 2025-02-18 - Discord Bot Non-blocking Typing Indicator & Empty Prompt Feedback
+**Learning:** In asynchronous chat apps like `discord.py`, executing synchronous API calls blocks the entire event loop and prevents visual typing feedback (`async with channel.typing()`) from reaching users. Replacing synchronous clients with non-blocking `AsyncOpenAI` allows real-time typing status indicators and prompt feedback to function smoothly.
+**Action:** Always use non-blocking asynchronous clients for long-running network operations and wrap AI generation calls in typing status context managers to provide immediate visual feedback.
