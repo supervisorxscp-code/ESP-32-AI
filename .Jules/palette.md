@@ -1,0 +1,3 @@
+## 2026-05-14 - Discord Bot Loading Feedback & Interaction Clarity
+**Learning:** In chat bots powered by LLMs, API generation takes several seconds. Without visual feedback, users assume the bot missed their message or crashed and often send duplicate requests. In Discord UI, activating `async with message.channel.typing():` acts as the native loading spinner / visual progress state. Additionally, handling empty prompt mentions with helpful guidance prevents silent failures or confusing error replies.
+**Action:** Always wrap asynchronous generative AI API calls in `async with message.channel.typing()` in Discord bots and handle empty prompt mentions gracefully.
