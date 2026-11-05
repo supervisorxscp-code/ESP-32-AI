@@ -1,20 +1,21 @@
-import discord
 import os
-from openai import OpenAI
+
+import discord
 from dotenv import load_dotenv
+from openai import AsyncOpenAI
 
 load_dotenv()
 
-client = OpenAI(
+client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("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")
+    api_key=os.getenv("NVIDIA_API_KEY", "dummy_key_for_init")
 )
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID", "0"))
 
 @bot.event
 async def on_ready():
@@ -29,10 +30,15 @@ async def on_message(message):
 
     user_input = message.content
     if bot.user.mentioned_in(message):
-        user_input = user_input.replace(f"<@{bot.user.id}>", "").strip()
+        user_input = user_input.replace(f"<@{bot.user.id}>", "").replace(f"<@!{bot.user.id}>", "").strip()
+
+    if not user_input:
+        await message.reply("Xin chào! Bạn cần mình giúp gì không? Hãy đặt câu hỏi cho mình nhé!")
+        return
 
     try:
-        response = client.chat.completions.create(
+        async with message.channel.typing():
+            response = await client.chat.completions.create(
             model="meta/llama-3.3-70b-instruct",
             messages=[
                 {"role": "system", "content": "Bạn là trợ lý thông minh, trả lời ngắn gọn bằng tiếng Việt."},
@@ -41,9 +47,10 @@ async def on_message(message):
             temperature=0.7,
             max_tokens=800
         )
-        ai_reply = response.choices[0].message.content
-        await message.reply(ai_reply[:1900])
-    except Exception as e:
-        await message.reply(f"❌ Lỗi: {str(e)}")
+            ai_reply = response.choices[0].message.content
+            await message.reply(ai_reply[:1900])
+    except Exception as e:  # noqa: BLE001
+        await message.reply(f"❌ Lỗi: {e!s}")
 
-bot.run(os.getenv("DISCORD_TOKEN"))
+if __name__ == "__main__":
+    bot.run(os.getenv("DISCORD_TOKEN"))
