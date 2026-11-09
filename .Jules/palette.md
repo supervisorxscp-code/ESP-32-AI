@@ -1,0 +1,3 @@
+## 2026-05-14 - Discord Bot Visual Typing State & Non-Blocking Async
+**Learning:** In chat bots powered by LLMs, generation latency creates an awkward silence where users may assume the bot has crashed or failed to receive their message. Utilizing `async with message.channel.typing():` in `discord.py` provides immediate visual loading feedback ("Bot is typing..."), reducing perceived latency and user anxiety. Crucially, the AI completion client must be asynchronous (`AsyncOpenAI`) to avoid freezing the event loop while the typing indicator is active.
+**Action:** When building conversational interfaces, always provide immediate visual feedback (e.g., typing indicator / loading state) using non-blocking asynchronous calls during long-running network or LLM tasks.
