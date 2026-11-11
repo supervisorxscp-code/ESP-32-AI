@@ -1,0 +1,3 @@
+## 2026-05-14 - Discord Bot Visual Feedback via Typing Indicators
+**Learning:** In chat bots, AI completions often introduce noticeable latency (1-3 seconds or more). Without visual feedback like `message.channel.typing()`, users assume the bot is unresponsive or dropped their request, leading to duplicate triggers. Furthermore, using synchronous API clients in async event loops blocks all bot operations.
+**Action:** Always wrap asynchronous AI requests inside `async with message.channel.typing():` and use asynchronous API clients (`AsyncOpenAI`) to provide continuous, non-blocking visual feedback to users.
